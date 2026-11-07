@@ -1,5 +1,4 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import mysql from 'mysql2/promise';
 
 const app = express();
@@ -20,52 +19,70 @@ const pool = mysql.createPool({
 });
 
 app.get('/users', async (req, res) => {
+    try {
         const [rows] = await pool.query('SELECT * FROM users');
-   return res.status(200).json({
-       msg: 'Sucesso ao retornar usuários',
-       data: rows
-   });
+        return res.status(200).json({
+            msg: 'Sucesso ao retornar usuários',
+            data: rows
+        });
+    } catch (error) {
+        return res.status(500).json({
+            msg: 'Erro ao retornar usuários',
+            error: error.message
+        });
+    }
 });
+
 
 app.post('/users', async (req, res) => {
-    const { name, email } = req.body;
-    const [result] = await pool.query('INSERT INTO users (name, email, id) VALUES (?, ?, null)', [name, email]);
-    return res.status(201).json({
-        msg: 'Usuário criado com sucesso',
-        data: result
-    });
+    try {
+        const { name, email } = req.body;
+        const [result] = await pool.query('INSERT INTO users (name, email, id) VALUES (?, ?, null)', [name, email]);
+        return res.status(201).json({
+            msg: 'Usuário criado com sucesso',
+            data: result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            msg: 'Erro ao criar usuário',
+            error: error.message
+        });
+    }
 });
 
-// console.log("Resultado da inserção: ", result);
-
-//if(result.affectedRows == 0) {
-   // return res.status(400).json({
-        msg: //'Erro ao criar usuário'
-   // });
-//}
-
-//delete
 app.delete('/users/:id', async (req, res) => {
-    const { id } = req.params;
-    const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
-    return res.status(201).json({
-        msg: 'Usuário deletado com sucesso',
-        data: result
-    });
+    try {
+        const { id } = req.params;
+        const [result] = await pool.query('DELETE FROM users WHERE id = ?', [id]);
+        return res.status(200).json({
+            msg: 'Usuário deletado com sucesso',
+            data: result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            msg: 'Erro ao deletar usuário',
+            error: error.message
+        });
+    }
 });
 
 app.put('/users/:id', async (req, res) => {
-    const { id } = req.params;
-    const { name, email } = req.body;
+    try {
+        const { id } = req.params;
+        const { name, email } = req.body;
+        const [result] = await pool.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, id]);
 
-    const [result] = await pool.query('UPDATE users SET name = ?, email = ? WHERE id = ?', [name, email, id]);
-  
-
-   res.status(200).json({
-        msg: 'Usuário atualizado com sucesso',
-        data: result
-    });
-});  
+        return res.status(200).json({
+            msg: 'Usuário atualizado com sucesso',
+            data: result
+        });
+    } catch (error) {
+        return res.status(500).json({
+            msg: 'Erro ao atualizar usuário',
+            error: error.message
+        });
+    }
+});
 
 app.listen(port, () => {
     console.log(`Servidor rodando na porta ${port}`);
